@@ -27,9 +27,12 @@ public final class Board {
     private int enPassantSquare = Square.NONE;
     private int halfmoveClock;
     private int fullmoveNumber = 1;
+    private long hash;
 
     // Undo stack: everything makeMove overwrites that cannot be recomputed from the move itself.
+    // historyHash also serves repetition detection: historyHash[i] is the hash of the position at ply i.
     private int ply;
+    private long[] historyHash = new long[INITIAL_HISTORY];
     private int[] historyMove = new int[INITIAL_HISTORY];
     private int[] historyCaptured = new int[INITIAL_HISTORY];
     private int[] historyCastling = new int[INITIAL_HISTORY];
@@ -114,6 +117,62 @@ public final class Board {
         return ply;
     }
 
+    /** Zobrist hash, maintained incrementally. Equal positions (for repetition purposes) have equal hashes. */
+    public long hash() {
+        return hash;
+    }
+
+    /**
+     * Whether the current position already occurred earlier in this board's move history.
+     *
+     * <p>Only positions since the last capture or pawn move can repeat, and only every other ply (same side to move).
+     * Positions given through FEN have no history, so repetitions before them are not seen.
+     */
+    public boolean isRepetition() {
+        int oldest = Math.max(0, ply - halfmoveClock);
+        for (int i = ply - 2; i >= oldest; i -= 2) {
+            if (historyHash[i] == hash) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Fifty-move rule: 100 plies without a capture or pawn move. */
+    public boolean isFiftyMoveDraw() {
+        return halfmoveClock >= 100;
+    }
+
+    /** Hash recomputed from scratch. Used to initialise positions and to verify the incremental updates. */
+    public long computeHash() {
+        long h = 0;
+        for (int sq = 0; sq < Square.COUNT; sq++) {
+            if (mailbox[sq] != Piece.NONE) {
+                h ^= Zobrist.PIECE_SQUARE[mailbox[sq]][sq];
+            }
+        }
+        if (sideToMove == Color.BLACK) {
+            h ^= Zobrist.BLACK_TO_MOVE;
+        }
+        return h ^ Zobrist.CASTLING[castlingRights] ^ enPassantKey();
+    }
+
+    /**
+     * The en passant file is hashed only when the side to move has a pawn next to the pawn that just double-pushed.
+     * Otherwise the capture is impossible and the position is the same as without an en passant square; hashing it
+     * anyway would make identical positions look different and miss repetitions.
+     */
+    private long enPassantKey() {
+        if (enPassantSquare == Square.NONE) {
+            return 0;
+        }
+        long pushedPawn = Bitboard.of(enPassantSquare ^ 8);
+        long neighbours = ((pushedPawn << 1) & ~Bitboard.FILE_A) | ((pushedPawn >>> 1) & ~Bitboard.FILE_H);
+        return (neighbours & pieces(sideToMove, PieceType.PAWN)) != 0
+                ? Zobrist.EN_PASSANT_FILE[Square.file(enPassantSquare)]
+                : 0;
+    }
+
     /**
      * Plays a move. The move must be pseudo-legal in this position (as produced by the move generator); no validation is
      * done here. It may leave the mover's king in check, which the caller is expected to test.
@@ -126,6 +185,8 @@ public final class Board {
         int us = sideToMove;
 
         pushHistory(move);
+        // Take out the state keys while the board still looks as it did when they were added.
+        hash ^= Zobrist.CASTLING[castlingRights] ^ enPassantKey();
 
         int captured = Piece.NONE;
         if (flag == Move.EN_PASSANT) {
@@ -154,6 +215,8 @@ public final class Board {
             fullmoveNumber++;
         }
         sideToMove = Color.opposite(us);
+        // Piece keys were updated by putPiece/removePiece; add the new state keys.
+        hash ^= Zobrist.BLACK_TO_MOVE ^ Zobrist.CASTLING[castlingRights] ^ enPassantKey();
     }
 
     /** Takes back the last move played with {@link #makeMove}. */
@@ -191,6 +254,7 @@ public final class Board {
         castlingRights = historyCastling[ply];
         enPassantSquare = historyEnPassant[ply];
         halfmoveClock = historyHalfmove[ply];
+        hash = historyHash[ply];
     }
 
     private void movePiece(int from, int to) {
@@ -202,12 +266,14 @@ public final class Board {
     private void pushHistory(int move) {
         if (ply == historyMove.length) {
             int capacity = ply * 2;
+            historyHash = Arrays.copyOf(historyHash, capacity);
             historyMove = Arrays.copyOf(historyMove, capacity);
             historyCaptured = Arrays.copyOf(historyCaptured, capacity);
             historyCastling = Arrays.copyOf(historyCastling, capacity);
             historyEnPassant = Arrays.copyOf(historyEnPassant, capacity);
             historyHalfmove = Arrays.copyOf(historyHalfmove, capacity);
         }
+        historyHash[ply] = hash;
         historyMove[ply] = move;
         historyCastling[ply] = castlingRights;
         historyEnPassant[ply] = enPassantSquare;
@@ -224,6 +290,7 @@ public final class Board {
         colorBitboards[Piece.color(piece)] |= bit;
         occupied |= bit;
         mailbox[square] = piece;
+        hash ^= Zobrist.PIECE_SQUARE[piece][square];
     }
 
     void removePiece(int square) {
@@ -234,6 +301,12 @@ public final class Board {
         colorBitboards[Piece.color(piece)] &= bit;
         occupied &= bit;
         mailbox[square] = Piece.NONE;
+        hash ^= Zobrist.PIECE_SQUARE[piece][square];
+    }
+
+    /** Recomputes the hash after the side/castling/en passant setters, which do not maintain it. */
+    void refreshHash() {
+        hash = computeHash();
     }
 
     void setSideToMove(int color) {

@@ -32,6 +32,7 @@ class BoardTest {
             boolean empty = board.pieceAt(sq) == Piece.NONE;
             assertEquals(empty, !Bitboard.contains(board.occupied(), sq), "mailbox disagrees with occupancy");
         }
+        assertEquals(board.computeHash(), board.hash(), "incremental hash drifted from a full recomputation");
     }
 
     @Test

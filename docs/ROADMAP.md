@@ -6,14 +6,14 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] Maven multi-module build (core / uci / gui), wrapper, CI
 - [x] UCI handshake (`uci`, `isready`, `quit`)
 
-## M1 — Board and move generation
+## M1 — Board and move generation ✅
 - [x] Bitboard board representation, piece/square/move encoding
 - [x] FEN parsing and serialization
 - [x] Pseudo-legal move generation (leapers via lookup tables, sliders via rays)
 - [x] Legality: checks, pins, castling rights, en passant
 - [x] make/unmake with an undo stack
-- [ ] Incremental Zobrist hashing
-- [x] Perft test suite (standard positions) in CI — ~32 M nodes/s, perft(6) from start in 3.7 s
+- [x] Incremental Zobrist hashing, repetition and fifty-move detection
+- [x] Perft test suite (standard positions) in CI — ~27 M nodes/s with hashing, perft(6) from start in 4.4 s
 
 ## M2 — First playable engine
 - [ ] UCI `position` / `go` / `stop` with time management
