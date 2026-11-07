@@ -74,6 +74,10 @@ public final class BoardView extends Region {
     private double squareSize;
     private double nodesBuiltForSize = -1;
 
+    /** Optional node shown left of the board at the board's exact height (e.g. an evaluation bar). */
+    private Region gutter;
+    private static final double GUTTER_GAP = 10;
+
     public BoardView(PieceSet pieceSet) {
         this.pieceSet = pieceSet;
         Arrays.fill(pieces, Piece.NONE);
@@ -150,15 +154,33 @@ public final class BoardView extends Region {
         return theme;
     }
 
+    /** Places {@code node} left of the board, as tall as the board; it is laid out only while visible. */
+    public void setGutter(Region node) {
+        if (gutter != null) {
+            getChildren().remove(gutter);
+        }
+        gutter = node;
+        if (node != null) {
+            getChildren().add(0, node);
+            node.visibleProperty().addListener((obs, was, is) -> requestLayout());
+        }
+        requestLayout();
+    }
+
     // --- Layout and drawing ---
 
     @Override
     protected void layoutChildren() {
-        double size = Math.min(getWidth(), getHeight());
+        boolean showGutter = gutter != null && gutter.isVisible();
+        double gutterWidth = showGutter ? gutter.prefWidth(-1) + GUTTER_GAP : 0;
+        double size = Math.min(getWidth() - gutterWidth, getHeight());
         squareSize = Math.floor(size / 8);
         double boardSize = squareSize * 8;
-        double x = Math.floor((getWidth() - boardSize) / 2);
+        double x = Math.floor((getWidth() - boardSize + gutterWidth) / 2);
         double y = Math.floor((getHeight() - boardSize) / 2);
+        if (showGutter) {
+            gutter.resizeRelocate(x - gutterWidth, y, gutterWidth - GUTTER_GAP, boardSize);
+        }
         for (Region layer : new Region[] {pieceLayer, overlay}) {
             layer.resizeRelocate(x, y, boardSize, boardSize);
         }

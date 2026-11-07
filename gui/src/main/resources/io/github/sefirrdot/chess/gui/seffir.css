@@ -346,3 +346,76 @@
 .separator .line {
     -fx-border-color: -seffir-border transparent transparent transparent;
 }
+
+/* Evaluation bar */
+.eval-black {
+    -fx-fill: #2a2f38;
+}
+
+.eval-white {
+    -fx-fill: #eef1f4;
+}
+
+.eval-midline {
+    -fx-fill: rgba(255, 90, 82, 0.55);
+}
+
+.eval-label {
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+}
+
+.eval-label.on-white {
+    -fx-text-fill: #2a2f38;
+}
+
+.eval-label.on-black {
+    -fx-text-fill: #eef1f4;
+}
+
+/* Analysis panel */
+.analysis-panel {
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 10;
+    -fx-border-color: #2c4a5e;
+    -fx-border-radius: 10;
+    -fx-padding: 10 14;
+}
+
+.analysis-engine {
+    -fx-font-size: 11px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.analysis-eval {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-text;
+}
+
+.analysis-stats {
+    -fx-font-size: 12px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.analysis-line {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: -seffir-accent-strong;
+}
+
+.toggle-button {
+    -fx-background-color: -seffir-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+    -fx-text-fill: -seffir-text;
+    -fx-padding: 8 12;
+    -fx-cursor: hand;
+}
+
+.toggle-button:selected {
+    -fx-background-color: #2c4a5e;
+    -fx-border-color: -seffir-accent;
+}

@@ -19,10 +19,10 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
     <td align="center"><sub>Game end detection with the mated king highlighted</sub></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/images/pgn-review.png" alt="Morphy's Opera Game loaded from PGN, SAN move list"></td>
+    <td colspan="2"><img src="docs/images/analysis.png" alt="Analysing Morphy's Opera Game: evaluation bar and best line in SAN"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><sub>Morphy's Opera Game (1858) opened from PGN: SAN move list, click any move or use ← → to replay it</sub></td>
+    <td colspan="2" align="center"><sub>Morphy's Opera Game (1858) opened from PGN and analysed at move 11: Seffir finds Morphy's own <code>12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1</code></sub></td>
   </tr>
 </table>
 
@@ -72,11 +72,16 @@ standard algebraic notation; click a move (or use the arrow keys) to replay the 
 The **Game** menu opens and saves PGN files, copies the game as PGN or the position as FEN, and pastes either from the
 clipboard: a pasted FEN starts a game from that position against the current opponent.
 
+**Analyze** (<kbd>A</kbd>) runs the engine on the position on the board — including any earlier move you are
+replaying — with an evaluation bar and the best line in SAN. To keep games fair it is available between humans and
+after a game ends, never while playing against an engine.
+
 | Shortcut | Action | Shortcut | Action |
 |---|---|---|---|
 | <kbd>Ctrl</kbd>+<kbd>N</kbd> | New game | <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Ctrl</kbd>+<kbd>S</kbd> | Open / save PGN |
 | <kbd>Ctrl</kbd>+<kbd>Z</kbd> | Take back | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Copy PGN |
 | <kbd>F</kbd> | Flip board | <kbd>Ctrl</kbd>+<kbd>V</kbd> | Paste PGN or FEN |
+| <kbd>A</kbd> | Analysis on / off | | |
 | <kbd>←</kbd> <kbd>→</kbd> | Previous / next move | <kbd>Home</kbd> <kbd>End</kbd> | Start / live position |
 
 Piece set: [Chessnut](https://github.com/LexLuengas/chessnut-pieces) by Alexis Luengas, Apache 2.0.
