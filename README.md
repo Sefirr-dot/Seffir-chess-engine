@@ -37,7 +37,15 @@ Requires JDK 21+. Maven is provided through the wrapper.
 ./mvnw -pl gui -am javafx:run       # launch the desktop app (after `./mvnw install` once)
 ```
 
-## Play against it
+## Desktop app
+
+`./mvnw package` also builds `gui/target/seffir-gui.jar`; start it with `scripts/seffir-gui.bat` (or `java -jar`).
+Drag and drop or click-click to move, legal moves are hinted, promotions open a piece chooser.
+Shortcuts: <kbd>Ctrl</kbd>+<kbd>N</kbd> new game, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>F</kbd> flip the board.
+
+Piece set: [Chessnut](https://github.com/LexLuengas/chessnut-pieces) by Alexis Luengas, Apache 2.0.
+
+## Play against it in another GUI
 
 `./mvnw package` produces a self-contained `engine-uci/target/seffir.jar`. In any UCI GUI
 ([Arena](http://www.playwitharena.de/), [CuteChess](https://cutechess.com/), [BanksiaGUI](https://banksiagui.com/)…)

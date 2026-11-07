@@ -1,0 +1,156 @@
+/* Seffir dark theme. */
+
+.root {
+    -seffir-bg: #14171c;
+    -seffir-panel: #1b1f26;
+    -seffir-surface: #232832;
+    -seffir-surface-hover: #2c3340;
+    -seffir-border: #2f3642;
+    -seffir-text: #e6e9ee;
+    -seffir-muted: #8a93a3;
+    -seffir-accent: #5fa8d3;
+    -seffir-accent-strong: #7cc0e8;
+    -seffir-warn: #ffb547;
+
+    -fx-font-family: "Segoe UI", "Inter", "Helvetica Neue", sans-serif;
+    -fx-font-size: 13px;
+    -fx-base: -seffir-surface;
+    -fx-background: -seffir-bg;
+    -fx-text-fill: -seffir-text;
+    -fx-focus-color: -seffir-accent;
+    -fx-faint-focus-color: transparent;
+    -fx-accent: -seffir-accent;
+}
+
+.main-window {
+    -fx-background-color: -seffir-bg;
+}
+
+.side-panel {
+    -fx-background-color: -seffir-bg;
+}
+
+.app-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-text;
+}
+
+.app-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.section-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-muted;
+    -fx-padding: 6 0 0 2;
+}
+
+.status {
+    -fx-font-size: 15px;
+    -fx-text-fill: -seffir-text;
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 10;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 10;
+    -fx-padding: 12 14;
+    -fx-max-width: infinity;
+}
+
+.status:over {
+    -fx-text-fill: -seffir-warn;
+    -fx-font-weight: bold;
+}
+
+/* Move list */
+.move-list {
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 10;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 10;
+    -fx-padding: 4;
+}
+
+.move-list .list-cell {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: -seffir-text;
+    -fx-background-color: transparent;
+    -fx-padding: 3 10;
+}
+
+.move-list .list-cell:odd {
+    -fx-background-color: rgba(255, 255, 255, 0.025);
+}
+
+.move-list .list-cell:filled:selected {
+    -fx-background-color: rgba(95, 168, 211, 0.25);
+}
+
+.move-list .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.move-list .scroll-bar .thumb {
+    -fx-background-color: -seffir-border;
+    -fx-background-radius: 4;
+}
+
+.move-list .scroll-bar .increment-button,
+.move-list .scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-shape: "";
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: -seffir-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+    -fx-text-fill: -seffir-text;
+    -fx-padding: 8 12;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: -seffir-surface-hover;
+}
+
+.button:pressed {
+    -fx-background-color: -seffir-accent;
+    -fx-text-fill: #0d1117;
+}
+
+/* Combo box */
+.combo-box {
+    -fx-background-color: -seffir-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+}
+
+.combo-box .list-cell {
+    -fx-text-fill: -seffir-text;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -seffir-surface;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: -seffir-surface-hover;
+}
+
+.tooltip {
+    -fx-background-color: #0d1014;
+    -fx-text-fill: -seffir-text;
+    -fx-font-size: 12px;
+}
+
+.promotion-choice {
+    -fx-cursor: hand;
+}
