@@ -24,7 +24,8 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] Self-contained `seffir.jar` + launcher scripts for GUIs — depth 7 in ~2 s from the start position
 
 ## M3 — Desktop GUI v1
-- [ ] Board rendering with piece set, drag & drop, legal move highlighting
+- [x] Board rendering with piece set, drag & drop, legal move highlighting, promotion chooser, themes, flip
+- [x] Game model in core: result detection (mate, stalemate, threefold, fifty moves, insufficient material)
 - [ ] Play vs engine (engine as UCI subprocess), clocks
 - [ ] Move list, PGN import/export, FEN setup
 - [ ] Engine analysis panel (depth, eval, PV)

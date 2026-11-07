@@ -161,6 +161,27 @@ public final class Board {
         return false;
     }
 
+    /**
+     * Neither side can possibly checkmate: K vs K, K + one minor piece vs K, or only bishops all standing on squares of
+     * the same colour. (K+N+N vs K is not included: mate is possible, if not forceable.)
+     */
+    public boolean hasInsufficientMaterial() {
+        long heavyOrPawns = 0;
+        for (int color = 0; color < Color.COUNT; color++) {
+            heavyOrPawns |= pieces(color, PieceType.PAWN) | pieces(color, PieceType.ROOK) | pieces(color, PieceType.QUEEN);
+        }
+        if (heavyOrPawns != 0) {
+            return false;
+        }
+        long knights = pieces(Color.WHITE, PieceType.KNIGHT) | pieces(Color.BLACK, PieceType.KNIGHT);
+        long bishops = pieces(Color.WHITE, PieceType.BISHOP) | pieces(Color.BLACK, PieceType.BISHOP);
+        if (Bitboard.count(knights | bishops) <= 1) {
+            return true;
+        }
+        return knights == 0
+                && ((bishops & Bitboard.DARK_SQUARES) == 0 || (bishops & Bitboard.LIGHT_SQUARES) == 0);
+    }
+
     /** Fifty-move rule: 100 plies without a capture or pawn move. */
     public boolean isFiftyMoveDraw() {
         return halfmoveClock >= 100;
