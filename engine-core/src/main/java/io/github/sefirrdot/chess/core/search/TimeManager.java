@@ -12,8 +12,10 @@ import io.github.sefirrdot.chess.core.board.Color;
  * </ul>
  *
  * <p>With a clock, the target is an equal share of the remaining time (assuming {@value #DEFAULT_MOVES_TO_GO} more moves
- * in sudden death) plus most of the increment; the hard limit allows overrunning it for a difficult iteration, but never
- * more than a fraction of what is left.
+ * in sudden death) plus most of the increment. The soft limit is half the target, because the iteration still running
+ * when it passes takes about as long again; the hard limit aborts an iteration that would still overshoot (at 1.25x the
+ * target, keeping the previous iteration's move), and never exceeds a quarter of what is left. With {@code movetime},
+ * both limits are the given time.
  */
 public record TimeManager(long softMillis, long hardMillis) {
 
@@ -39,8 +41,10 @@ public record TimeManager(long softMillis, long hardMillis) {
 
             long usable = Math.max(1, remaining - MOVE_OVERHEAD);
             long target = usable / movesToGo + increment * 3 / 4;
-            long hard = Math.min(usable / 3, target * 4);
-            long soft = Math.min(target, hard);
+            // Each iteration costs several times the previous one, so starting one late overshoots the target badly.
+            // Stop deepening at half the target; the iteration in flight then usually ends near the target itself.
+            long hard = Math.min(usable / 4, target * 5 / 4);
+            long soft = Math.min(target / 2, hard);
             return new TimeManager(Math.max(1, soft), Math.max(1, hard));
         }
         return new TimeManager(UNLIMITED, UNLIMITED);

@@ -29,22 +29,23 @@ class TimeManagerTest {
         var white = TimeManager.forLimits(limits, Color.WHITE);
         var black = TimeManager.forLimits(limits, Color.BLACK);
         assertTrue(white.softMillis() > black.softMillis());
-        // 60 s / 30 moves + 3/4 of the 1 s increment ≈ 2.7 s.
-        assertTrue(white.softMillis() > 2_500 && white.softMillis() < 3_000, "soft " + white.softMillis());
+        // Target: 60 s / 30 moves + 3/4 of the 1 s increment ≈ 2.7 s; stop deepening at half of it.
+        assertTrue(white.softMillis() > 1_250 && white.softMillis() < 1_500, "soft " + white.softMillis());
+        assertTrue(white.hardMillis() > 3_200 && white.hardMillis() < 3_500, "hard " + white.hardMillis());
     }
 
     @Test
-    void neverPlansToUseMoreThanAThirdOfTheClock() {
+    void neverPlansToUseMoreThanAQuarterOfTheClock() {
         var limits = SearchLimits.NONE.withClock(3_000, 3_000, 5_000, 5_000, 0);
         var time = TimeManager.forLimits(limits, Color.WHITE);
-        assertTrue(time.hardMillis() <= (3_000 - TimeManager.MOVE_OVERHEAD) / 3);
+        assertTrue(time.hardMillis() <= (3_000 - TimeManager.MOVE_OVERHEAD) / 4);
         assertTrue(time.softMillis() <= time.hardMillis());
     }
 
     @Test
     void movesToGoSplitsTheRemainingTime() {
         var time = TimeManager.forLimits(SearchLimits.NONE.withClock(10_030, 10_030, 0, 0, 10), Color.WHITE);
-        assertEquals(1_000, time.softMillis());
+        assertEquals(500, time.softMillis(), "10 s over 10 moves: 1 s target, deepen until 0.5 s");
     }
 
     @Test
