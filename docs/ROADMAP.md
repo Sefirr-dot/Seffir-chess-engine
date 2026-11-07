@@ -26,7 +26,7 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 ## M3 — Desktop GUI v1
 - [x] Board rendering with piece set, drag & drop, legal move highlighting, promotion chooser, themes, flip
 - [x] Game model in core: result detection (mate, stalemate, threefold, fifty moves, insufficient material)
-- [ ] Play vs engine (engine as UCI subprocess), clocks
+- [x] Play vs engine (engine as UCI subprocess, built-in Seffir or any executable), clocks, new game dialog
 - [ ] Move list, PGN import/export, FEN setup
 - [ ] Engine analysis panel (depth, eval, PV)
 - [ ] **Match arena**: engine vs engine with a live grid of boards (several concurrent games), opening book with
