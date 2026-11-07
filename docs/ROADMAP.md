@@ -7,8 +7,8 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] UCI handshake (`uci`, `isready`, `quit`)
 
 ## M1 — Board and move generation
-- [ ] Bitboard board representation, piece/square/move encoding
-- [ ] FEN parsing and serialization
+- [x] Bitboard board representation, piece/square/move encoding
+- [x] FEN parsing and serialization
 - [ ] Pseudo-legal move generation (leapers via lookup tables, sliders via rays)
 - [ ] Legality: checks, pins, castling rights, en passant
 - [ ] make/unmake with incremental Zobrist hashing
