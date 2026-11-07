@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.sefirrdot.chess.core.board.Color;
 import io.github.sefirrdot.chess.core.board.Fen;
 import io.github.sefirrdot.chess.core.game.GameResult.Outcome;
 import io.github.sefirrdot.chess.core.game.GameResult.Reason;
@@ -114,6 +115,24 @@ class GameTest {
         game.undo();
         assertEquals(Fen.STARTING_POSITION, game.fen());
         assertThrows(IllegalStateException.class, game::undo);
+    }
+
+    @Test
+    void flaggingLosesWhenTheOpponentCanStillMate() {
+        Game game = new Game();
+        game.flag(Color.WHITE);
+        assertEquals(new GameResult(Outcome.BLACK_WINS, Reason.TIMEOUT), game.result());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",      // black has a bare king
+        "4kn2/8/8/8/8/8/4P3/4K3 w - - 0 1",     // black has king + knight
+    })
+    void flaggingDrawsWhenTheOpponentCannotMate(String fen) {
+        Game game = new Game(fen);
+        game.flag(Color.WHITE);
+        assertEquals(GameResult.draw(Reason.TIMEOUT), game.result());
     }
 
     @Test

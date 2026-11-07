@@ -1,8 +1,10 @@
 package io.github.sefirrdot.chess.core.game;
 
+import io.github.sefirrdot.chess.core.board.Bitboard;
 import io.github.sefirrdot.chess.core.board.Board;
 import io.github.sefirrdot.chess.core.board.Color;
 import io.github.sefirrdot.chess.core.board.Fen;
+import io.github.sefirrdot.chess.core.board.PieceType;
 import io.github.sefirrdot.chess.core.game.GameResult.Reason;
 import io.github.sefirrdot.chess.core.move.Move;
 import io.github.sefirrdot.chess.core.move.MoveList;
@@ -119,6 +121,21 @@ public final class Game {
         positionHashes.remove(positionHashes.size() - 1);
         declaredResult = null;
         refreshLegalMoves();
+    }
+
+    /**
+     * {@code color} ran out of time. The opponent wins, unless it has nothing left to mate with (a bare king, or a king
+     * and a single minor piece), in which case the game is drawn.
+     */
+    public void flag(int color) {
+        int opponent = Color.opposite(color);
+        long others = board.occupancy(opponent) & ~board.pieces(opponent, PieceType.KING);
+        boolean opponentCanMate = Bitboard.count(others) > 1
+                || (others & (board.pieces(opponent, PieceType.PAWN) | board.pieces(opponent, PieceType.ROOK)
+                        | board.pieces(opponent, PieceType.QUEEN))) != 0;
+        declareResult(opponentCanMate
+                ? GameResult.win(opponent == Color.WHITE, Reason.TIMEOUT)
+                : GameResult.draw(Reason.TIMEOUT));
     }
 
     /** Ends the game for a reason the position cannot show: time forfeit, resignation, adjudication. */
