@@ -19,6 +19,12 @@
             <groupId>io.github.sefirrdot.chess</groupId>
             <artifactId>engine-core</artifactId>
         </dependency>
+        <!-- Bundled so the app can start Seffir as a child UCI process from its own classpath. -->
+        <dependency>
+            <groupId>io.github.sefirrdot.chess</groupId>
+            <artifactId>engine-uci</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>

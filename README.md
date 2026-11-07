@@ -4,8 +4,21 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 
 [![CI](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml)
 
-> **Status:** playable UCI engine (alpha-beta search, perft-validated move generation). The desktop GUI is next.
-> See the [roadmap](docs/ROADMAP.md).
+> **Status:** playable engine and desktop app — play against Seffir or any UCI engine with clocks.
+> Next: SAN/PGN, an analysis panel and a match arena. See the [roadmap](docs/ROADMAP.md).
+
+![Seffir playing itself in the desktop app, Walnut theme](docs/images/game-walnut.png)
+
+<table>
+  <tr>
+    <td><img src="docs/images/game-slate.png" alt="Engine game with live thinking line, Slate theme"></td>
+    <td><img src="docs/images/checkmate.png" alt="End of game: checkmate detected, king highlighted"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Live engine output: depth, evaluation and principal variation</sub></td>
+    <td align="center"><sub>Game end detection with the mated king highlighted</sub></td>
+  </tr>
+</table>
 
 ## Features
 
@@ -14,6 +27,8 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 - **Search:** negamax alpha-beta, iterative deepening, quiescence, check extension, MVV-LVA ordering.
 - **Evaluation:** material + piece-square tables with a tapered king.
 - **UCI:** `position`, `go` (depth / nodes / movetime / clock / infinite), `stop`, plus `d` to print the board.
+- **Desktop app (JavaFX):** vector pieces, drag & drop, move hints, promotion chooser, three board themes; play
+  against the built-in engine or any UCI executable (Stockfish…) with Fischer clocks and a live thinking line.
 
 ## Architecture
 
@@ -40,6 +55,10 @@ Requires JDK 21+. Maven is provided through the wrapper.
 ## Desktop app
 
 `./mvnw package` also builds `gui/target/seffir-gui.jar`; start it with `scripts/seffir-gui.bat` (or `java -jar`).
+It opens a game against Seffir with you as White. **New game** lets you pick your colour, the opponent (human,
+the built-in Seffir, or any UCI engine executable such as Stockfish) and the time control (1+0 up to 30+0, or
+unlimited). Undo against an engine takes back your move and its reply.
+
 Drag and drop or click-click to move, legal moves are hinted, promotions open a piece chooser.
 Shortcuts: <kbd>Ctrl</kbd>+<kbd>N</kbd> new game, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>F</kbd> flip the board.
 

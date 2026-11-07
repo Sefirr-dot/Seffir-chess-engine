@@ -154,3 +154,111 @@
 .promotion-choice {
     -fx-cursor: hand;
 }
+
+/* Player cards and clocks */
+.player-card {
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 10;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 10;
+    -fx-padding: 10 14;
+}
+
+.player-card:active {
+    -fx-border-color: -seffir-accent;
+    -fx-background-color: #1d2733;
+}
+
+.color-dot {
+    -fx-min-width: 14;
+    -fx-min-height: 14;
+    -fx-max-width: 14;
+    -fx-max-height: 14;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-border-color: #6b7483;
+}
+
+.color-dot.white {
+    -fx-background-color: #f2f4f7;
+}
+
+.color-dot.black {
+    -fx-background-color: #0b0d10;
+}
+
+.player-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-text;
+}
+
+.clock {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-muted;
+}
+
+.player-card:active .clock {
+    -fx-text-fill: -seffir-text;
+}
+
+.clock:low-time {
+    -fx-text-fill: #ff5a52;
+}
+
+.engine-line {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: -seffir-accent-strong;
+    -fx-padding: 0 4;
+    -fx-text-overrun: ellipsis;
+}
+
+.button.primary {
+    -fx-background-color: -seffir-accent;
+    -fx-border-color: -seffir-accent;
+    -fx-text-fill: #0d1117;
+    -fx-font-weight: bold;
+}
+
+.button.primary:hover {
+    -fx-background-color: -seffir-accent-strong;
+}
+
+/* New game dialog */
+.dialog-pane {
+    -fx-background-color: -seffir-bg;
+}
+
+.dialog-pane > .content {
+    -fx-background-color: -seffir-bg;
+}
+
+.dialog-pane > .button-bar > .container {
+    -fx-background-color: -seffir-bg;
+    -fx-padding: 8 24 20 24;
+}
+
+.form-label {
+    -fx-text-fill: -seffir-muted;
+    -fx-font-weight: bold;
+}
+
+.segmented .toggle-button {
+    -fx-background-color: -seffir-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+    -fx-text-fill: -seffir-text;
+    -fx-padding: 7 16;
+    -fx-cursor: hand;
+}
+
+.segmented .toggle-button:selected {
+    -fx-background-color: -seffir-accent;
+    -fx-border-color: -seffir-accent;
+    -fx-text-fill: #0d1117;
+    -fx-font-weight: bold;
+}
