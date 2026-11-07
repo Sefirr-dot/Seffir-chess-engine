@@ -66,6 +66,29 @@ public final class Board {
         return Fen.parse(Fen.STARTING_POSITION);
     }
 
+    /** Deep copy, including the move history (so repetitions and unmake keep working on the copy). */
+    public Board copy() {
+        var copy = new Board();
+        System.arraycopy(pieceBitboards, 0, copy.pieceBitboards, 0, pieceBitboards.length);
+        System.arraycopy(colorBitboards, 0, copy.colorBitboards, 0, colorBitboards.length);
+        System.arraycopy(mailbox, 0, copy.mailbox, 0, mailbox.length);
+        copy.occupied = occupied;
+        copy.sideToMove = sideToMove;
+        copy.castlingRights = castlingRights;
+        copy.enPassantSquare = enPassantSquare;
+        copy.halfmoveClock = halfmoveClock;
+        copy.fullmoveNumber = fullmoveNumber;
+        copy.hash = hash;
+        copy.ply = ply;
+        copy.historyHash = historyHash.clone();
+        copy.historyMove = historyMove.clone();
+        copy.historyCaptured = historyCaptured.clone();
+        copy.historyCastling = historyCastling.clone();
+        copy.historyEnPassant = historyEnPassant.clone();
+        copy.historyHalfmove = historyHalfmove.clone();
+        return copy;
+    }
+
     public int pieceAt(int square) {
         return mailbox[square];
     }

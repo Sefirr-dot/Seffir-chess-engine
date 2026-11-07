@@ -24,6 +24,12 @@ public final class MoveList {
         return size;
     }
 
+    public void swap(int i, int j) {
+        int tmp = moves[i];
+        moves[i] = moves[j];
+        moves[j] = tmp;
+    }
+
     public void clear() {
         size = 0;
     }

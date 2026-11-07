@@ -75,6 +75,20 @@ class BoardTest {
     }
 
     @Test
+    void copyIsIndependentAndKeepsHistory() {
+        Board original = Board.startingPosition();
+        original.putPiece(Piece.WHITE_QUEEN, Square.D4);
+        original.refreshHash();
+        Board copy = original.copy();
+        assertConsistent(copy);
+        assertEquals(Fen.format(original), Fen.format(copy));
+        assertEquals(original.hash(), copy.hash());
+
+        copy.removePiece(Square.D4);
+        assertEquals(Piece.WHITE_QUEEN, original.pieceAt(Square.D4), "changing the copy must not touch the original");
+    }
+
+    @Test
     void puttingOnOccupiedSquareFailsFast() {
         var board = new Board();
         board.putPiece(Piece.WHITE_ROOK, Square.A1);
