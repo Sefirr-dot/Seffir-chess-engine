@@ -15,11 +15,13 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] Incremental Zobrist hashing, repetition and fifty-move detection
 - [x] Perft test suite (standard positions) in CI — ~27 M nodes/s with hashing, perft(6) from start in 4.4 s
 
-## M2 — First playable engine
-- [ ] UCI `position` / `go` / `stop` with time management
-- [ ] Negamax + alpha-beta, iterative deepening
-- [ ] Evaluation: material + piece-square tables
-- [ ] Quiescence search
+## M2 — First playable engine ✅
+- [x] UCI `position` / `go` / `stop` with time management (search on its own thread)
+- [x] Negamax + alpha-beta, iterative deepening, check extension
+- [x] Evaluation: material + piece-square tables, tapered king
+- [x] Quiescence search
+- [x] MVV-LVA capture ordering, draws by repetition / fifty-move rule
+- [x] Self-contained `seffir.jar` + launcher scripts for GUIs — depth 7 in ~2 s from the start position
 
 ## M3 — Desktop GUI v1
 - [ ] Board rendering with piece set, drag & drop, legal move highlighting
@@ -29,7 +31,7 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 
 ## M4 — Stronger search
 - [ ] Transposition table
-- [ ] Move ordering: TT move, MVV-LVA, killers, history
+- [ ] Move ordering: TT move, killers, history
 - [ ] Null-move pruning, late move reductions, PVS
 - [ ] Magic bitboards
 - [ ] Self-play testing pipeline (fastchess / cutechess-cli, SPRT)
