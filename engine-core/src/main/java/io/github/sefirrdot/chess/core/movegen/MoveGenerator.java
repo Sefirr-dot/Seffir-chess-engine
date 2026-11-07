@@ -37,6 +37,24 @@ public final class MoveGenerator {
         }
     }
 
+    /** The legal move matching a UCI string such as {@code e2e4} or {@code e7e8q}, or {@link Move#NONE}. */
+    public static int parseUciMove(Board board, String uci) {
+        var moves = new MoveList();
+        generateLegal(board, moves);
+        for (int i = 0; i < moves.size(); i++) {
+            if (Move.toUci(moves.get(i)).equals(uci)) {
+                return moves.get(i);
+            }
+        }
+        return Move.NONE;
+    }
+
+    /** After a pseudo-legal move has been made: whether it left the mover's own king attacked, i.e. was illegal. */
+    public static boolean leftKingInCheck(Board board) {
+        int mover = Color.opposite(board.sideToMove());
+        return Attacks.isSquareAttacked(board, board.kingSquare(mover), board.sideToMove());
+    }
+
     public static boolean isInCheck(Board board) {
         int us = board.sideToMove();
         return Attacks.isSquareAttacked(board, board.kingSquare(us), Color.opposite(us));

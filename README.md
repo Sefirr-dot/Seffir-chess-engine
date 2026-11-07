@@ -4,7 +4,16 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 
 [![CI](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml)
 
-> **Status:** early development. The UCI handshake works; board representation and move generation are next. See the [roadmap](docs/ROADMAP.md).
+> **Status:** playable UCI engine (alpha-beta search, perft-validated move generation). The desktop GUI is next.
+> See the [roadmap](docs/ROADMAP.md).
+
+## Features
+
+- **Bitboard board** with mailbox, incremental Zobrist hashing, repetition and fifty-move detection.
+- **Legal move generation** validated against the standard perft suite (~27M nodes/s).
+- **Search:** negamax alpha-beta, iterative deepening, quiescence, check extension, MVV-LVA ordering.
+- **Evaluation:** material + piece-square tables with a tapered king.
+- **UCI:** `position`, `go` (depth / nodes / movetime / clock / infinite), `stop`, plus `d` to print the board.
 
 ## Architecture
 
@@ -28,14 +37,22 @@ Requires JDK 21+. Maven is provided through the wrapper.
 ./mvnw -pl gui -am javafx:run       # launch the desktop app (after `./mvnw install` once)
 ```
 
-Run the engine directly in UCI mode:
+## Play against it
 
-```bash
-java -cp "engine-uci/target/engine-uci-0.1.0-SNAPSHOT.jar:engine-core/target/engine-core-0.1.0-SNAPSHOT.jar" \
-     io.github.sefirrdot.chess.uci.UciMain
+`./mvnw package` produces a self-contained `engine-uci/target/seffir.jar`. In any UCI GUI
+([Arena](http://www.playwitharena.de/), [CuteChess](https://cutechess.com/), [BanksiaGUI](https://banksiagui.com/)…)
+add a new engine pointing at `scripts/seffir.bat` (Windows) or `scripts/seffir.sh` (Linux/macOS).
+
+Or talk to it directly:
+
+```text
+$ java -jar engine-uci/target/seffir.jar
+position startpos moves e2e4
+go movetime 2000
+info depth 1 score cp 0 nodes 21 ... pv e7e5
+...
+bestmove e7e5
 ```
-
-(On Windows use `;` instead of `:` as classpath separator.)
 
 ## Contributing
 
