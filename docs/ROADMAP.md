@@ -28,13 +28,17 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [ ] Play vs engine (engine as UCI subprocess), clocks
 - [ ] Move list, PGN import/export, FEN setup
 - [ ] Engine analysis panel (depth, eval, PV)
+- [ ] **Match arena**: engine vs engine with a live grid of boards (several concurrent games), opening book with
+      colour-reversed pairs, live W/D/L, Elo ± error and SPRT log-likelihood chart that stops the match on its own
+- [ ] Click a live game to follow it full size (both engines' eval and PV); exhibition games at slow time controls
+- [ ] PGN replayer to step through finished games (also for headless `fastchess` runs)
 
 ## M4 — Stronger search
 - [ ] Transposition table
 - [ ] Move ordering: TT move, killers, history
 - [ ] Null-move pruning, late move reductions, PVS
 - [ ] Magic bitboards
-- [ ] Self-play testing pipeline (fastchess / cutechess-cli, SPRT)
+- [ ] Every strength change validated by SPRT in the match arena (headless `fastchess` for long runs)
 
 ## M5 — Public
 - [ ] Lichess bot account
