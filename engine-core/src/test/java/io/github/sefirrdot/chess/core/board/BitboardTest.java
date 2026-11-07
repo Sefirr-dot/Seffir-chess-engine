@@ -43,6 +43,15 @@ class BitboardTest {
     }
 
     @Test
+    void lsbAndMsbFindExtremeSquares() {
+        long bb = Bitboard.of(Square.C3) | Bitboard.of(Square.F6) | Bitboard.of(Square.B7);
+        assertEquals(Square.C3, Bitboard.lsb(bb));
+        assertEquals(Square.B7, Bitboard.msb(bb));
+        assertEquals(Square.H8, Bitboard.msb(Bitboard.ALL));
+        assertEquals(Square.A1, Bitboard.msb(Bitboard.of(Square.A1)));
+    }
+
+    @Test
     void toStringPutsRankEightOnTop() {
         String expected = """
                 . . . . . . . 1

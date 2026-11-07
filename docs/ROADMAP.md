@@ -9,10 +9,11 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 ## M1 — Board and move generation
 - [x] Bitboard board representation, piece/square/move encoding
 - [x] FEN parsing and serialization
-- [ ] Pseudo-legal move generation (leapers via lookup tables, sliders via rays)
-- [ ] Legality: checks, pins, castling rights, en passant
-- [ ] make/unmake with incremental Zobrist hashing
-- [ ] Perft test suite (standard positions) in CI
+- [x] Pseudo-legal move generation (leapers via lookup tables, sliders via rays)
+- [x] Legality: checks, pins, castling rights, en passant
+- [x] make/unmake with an undo stack
+- [ ] Incremental Zobrist hashing
+- [x] Perft test suite (standard positions) in CI — ~32 M nodes/s, perft(6) from start in 3.7 s
 
 ## M2 — First playable engine
 - [ ] UCI `position` / `go` / `stop` with time management

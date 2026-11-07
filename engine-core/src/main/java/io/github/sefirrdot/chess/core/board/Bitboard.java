@@ -45,6 +45,11 @@ public final class Bitboard {
         return Long.numberOfTrailingZeros(bitboard);
     }
 
+    /** Index of the most significant set bit. Undefined (returns -1) for an empty bitboard. */
+    public static int msb(long bitboard) {
+        return 63 - Long.numberOfLeadingZeros(bitboard);
+    }
+
     /** The same bitboard with its least significant set bit cleared. Used to iterate: {@code while (bb != 0) { sq = lsb(bb); bb = clearLsb(bb); }} */
     public static long clearLsb(long bitboard) {
         return bitboard & (bitboard - 1);
