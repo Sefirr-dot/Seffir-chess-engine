@@ -9,6 +9,10 @@ import io.github.sefirrdot.chess.core.game.GameResult;
 import io.github.sefirrdot.chess.core.move.Move;
 import io.github.sefirrdot.chess.core.notation.Pgn;
 import io.github.sefirrdot.chess.core.notation.San;
+import io.github.sefirrdot.chess.gui.analysis.AnalysisPanel;
+import io.github.sefirrdot.chess.gui.analysis.EvalBar;
+import io.github.sefirrdot.chess.gui.analysis.Evaluation;
+import io.github.sefirrdot.chess.gui.analysis.PvLine;
 import io.github.sefirrdot.chess.gui.board.BoardTheme;
 import io.github.sefirrdot.chess.gui.board.BoardView;
 import io.github.sefirrdot.chess.gui.board.PieceSet;
@@ -49,6 +53,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -100,11 +105,24 @@ public final class MainWindow extends BorderPane {
     private int viewPly = -1;
     /** Names from a loaded PGN, overriding the setup's player names; null otherwise. */
     private String[] pgnNames;
+
+    // Analysis: a separate engine process thinking about the position on the board, in human-only games or after
+    // the game is over (never while playing against an engine).
+    private final EvalBar evalBar = new EvalBar();
+    private final AnalysisPanel analysisPanel = new AnalysisPanel();
+    private final ToggleButton analyzeButton = new ToggleButton("Analyze");
+    private UciEngine analysisEngine;
+    private boolean analyzing;
+    /** Identifies the analysed position; info lines tagged with an older value are stale. */
+    private long analysisId;
+    private String analysedKey;
     private String stylesheet;
 
     public MainWindow() {
         getStyleClass().add("main-window");
 
+        evalBar.setVisible(false);
+        board.setGutter(evalBar);
         var boardHolder = new StackPane(board);
         boardHolder.getStyleClass().add("board-holder");
         boardHolder.setPadding(new Insets(24));
@@ -138,6 +156,10 @@ public final class MainWindow extends BorderPane {
             for (int color = 0; color < Color.COUNT; color++) {
                 closeEngine(color);
             }
+            if (analysisEngine != null) {
+                analysisEngine.close();
+                analysisEngine = null;
+            }
         });
         engineStarter.shutdown();
         try {
@@ -169,6 +191,8 @@ public final class MainWindow extends BorderPane {
         // Takes no room at all while no engine is thinking.
         engineLine.visibleProperty().bind(engineLine.textProperty().isNotEmpty());
         engineLine.managedProperty().bind(engineLine.visibleProperty());
+        analysisPanel.setVisible(false);
+        analysisPanel.managedProperty().bind(analysisPanel.visibleProperty());
 
         var movesHeader = new Label("MOVES");
         movesHeader.getStyleClass().add("section-header");
@@ -184,7 +208,11 @@ public final class MainWindow extends BorderPane {
         newGame.getStyleClass().add("primary");
         var undo = button("Undo", "Ctrl+Z", this::undo);
         var flip = button("Flip", "F", this::flip);
-        var buttons = new HBox(8, newGame, undo, flip);
+        analyzeButton.setMaxWidth(Double.MAX_VALUE);
+        analyzeButton.setFocusTraversable(false);
+        analyzeButton.setTooltip(new Tooltip("Analyze the position on the board (A)"));
+        analyzeButton.setOnAction(e -> setAnalyzing(analyzeButton.isSelected()));
+        var buttons = new HBox(8, newGame, undo, flip, analyzeButton);
         buttons.getChildren().forEach(b -> HBox.setHgrow(b, Priority.ALWAYS));
 
         var themeHeader = new Label("BOARD");
@@ -195,7 +223,8 @@ public final class MainWindow extends BorderPane {
         themes.setMaxWidth(Double.MAX_VALUE);
         themes.setOnAction(e -> board.setTheme(themes.getValue()));
 
-        var panel = new VBox(12, header, topCard, status, engineLine, movesHeader, moveList, navigation, bottomCard,
+        var panel = new VBox(12, header, topCard, status, engineLine, analysisPanel, movesHeader, moveList, navigation,
+                bottomCard,
                 buttons,
                 themeHeader, themes);
         panel.getStyleClass().add("side-panel");
@@ -227,7 +256,8 @@ public final class MainWindow extends BorderPane {
         var exit = item("Exit", () -> getScene().getWindow().hide(), null);
         var gameMenu = new Menu("Game", null, newGame, takeBack, new SeparatorMenuItem(), open, save,
                 new SeparatorMenuItem(), copyPgn, copyFen, paste, new SeparatorMenuItem(), exit);
-        var viewMenu = new Menu("View", null, item("Flip board", this::flip, new KeyCodeCombination(KeyCode.F)));
+        var viewMenu = new Menu("View", null, item("Flip board", this::flip, new KeyCodeCombination(KeyCode.F)),
+                item("Analysis on / off", () -> setAnalyzing(!analyzing), new KeyCodeCombination(KeyCode.A)));
         return new MenuBar(gameMenu, viewMenu);
     }
 
@@ -342,7 +372,7 @@ public final class MainWindow extends BorderPane {
         }
         long id = gameId;
         int ply = game.moves().size();
-        engine.go(positionCommand(), goArguments(), info -> Platform.runLater(() -> {
+        engine.go(positionCommand(game), goArguments(), info -> Platform.runLater(() -> {
             if (id == gameId && ply == game.moves().size()) {
                 showThinking(engine, side, info);
             }
@@ -359,9 +389,9 @@ public final class MainWindow extends BorderPane {
         }));
     }
 
-    private String positionCommand() {
-        String moves = game.moves().stream().map(Move::toUci).collect(Collectors.joining(" "));
-        String start = game.startFen().equals(new Game().startFen()) ? "startpos" : "fen " + game.startFen();
+    private static String positionCommand(Game g) {
+        String moves = g.moves().stream().map(Move::toUci).collect(Collectors.joining(" "));
+        String start = g.startFen().equals(Fen.STARTING_POSITION) ? "startpos" : "fen " + g.startFen();
         return moves.isEmpty() ? start : start + " moves " + moves;
     }
 
@@ -486,6 +516,97 @@ public final class MainWindow extends BorderPane {
         }
         String[] startFields = game.startFen().split(" ");
         moveList.show(san, startFields[1].equals("b"), Integer.parseInt(startFields[5]), shownPly());
+        evalBar.setFlipped(this.board.isFlipped());
+        updateAnalysis();
+    }
+
+    // --- Analysis ---
+
+    /** Analysis is allowed between humans and after the game; never while an engine is playing. */
+    private boolean canAnalyze() {
+        return game.result().isOver() || (setup.isHuman(Color.WHITE) && setup.isHuman(Color.BLACK));
+    }
+
+    private void setAnalyzing(boolean on) {
+        boolean allowed = on && canAnalyze();
+        analyzing = allowed;
+        analyzeButton.setSelected(allowed);
+        evalBar.setVisible(allowed);
+        analysisPanel.setVisible(allowed);
+        analysedKey = null;
+        if (!allowed) {
+            analysisId++;
+            if (analysisEngine != null) {
+                analysisEngine.stop();
+            }
+            if (on) {
+                engineLine.setText("Analysis is available between humans or once the game is over.");
+            }
+            return;
+        }
+        EngineConfig config = EngineConfig.builtIn();
+        if (analysisEngine == null || !analysisEngine.isAlive()) {
+            analysisPanel.showMessage(config.name(), "Starting engine…");
+            engineStarter.execute(() -> {
+                try {
+                    UciEngine started = UciEngine.start(config);
+                    Platform.runLater(() -> {
+                        analysisEngine = started;
+                        updateAnalysis();
+                    });
+                } catch (IOException e) {
+                    Platform.runLater(() -> analysisPanel.showMessage(config.name(), "Could not start: " + e.getMessage()));
+                }
+            });
+        } else {
+            updateAnalysis();
+        }
+    }
+
+    /** (Re)starts infinite analysis when the position on the board changed. */
+    private void updateAnalysis() {
+        if (!analyzing) {
+            return;
+        }
+        if (!canAnalyze()) {
+            setAnalyzing(false);
+            return;
+        }
+        if (analysisEngine == null) {
+            return;  // still starting; called again once it is up
+        }
+        Game shown = viewPly < 0 ? game : gameAt(viewPly);
+        String key = shown.fen() + "#" + shownPly();
+        if (key.equals(analysedKey)) {
+            return;
+        }
+        analysedKey = key;
+        long id = ++analysisId;
+        String engineName = analysisEngine.name();
+
+        GameResult result = shown.result();
+        if (result.isOver()) {
+            analysisEngine.stop();
+            double share = switch (result.outcome()) {
+                case WHITE_WINS -> 1;
+                case BLACK_WINS -> 0;
+                default -> 0.5;
+            };
+            evalBar.show(share, result.outcome() == GameResult.Outcome.DRAW ? "½" : "#");
+            analysisPanel.showMessage(engineName, describe(shown));
+            return;
+        }
+        String fen = shown.fen();
+        int sideToMove = shown.sideToMove();
+        analysisPanel.showMessage(engineName, "Thinking…");
+        analysisEngine.go(positionCommand(shown), "infinite", info -> Platform.runLater(() -> {
+            if (id != analysisId) {
+                return;
+            }
+            Evaluation eval = Evaluation.fromEngine(info, sideToMove);
+            evalBar.show(eval);
+            analysisPanel.showInfo(engineName, eval, info.depth(), info.nps(), PvLine.toSan(fen, info.pv(), 12));
+        }));
     }
 
     /** Ply on the board: the browsed one, or the live position's. */
