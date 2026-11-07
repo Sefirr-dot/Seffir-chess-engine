@@ -67,6 +67,9 @@ public final class BoardView extends Region {
     private int hoverSquare = Square.NONE;
     /** A move the user just dropped: the piece is already on its target square, so don't animate it. */
     private int moveWithoutAnimation = Move.NONE;
+    /** Identity of the position last shown (start FEN + number of moves), to recognise a one-move step. */
+    private String shownStartFen;
+    private int shownMoveCount = -1;
 
     private double squareSize;
     private double nodesBuiltForSize = -1;
@@ -103,10 +106,14 @@ public final class BoardView extends Region {
         hidePromotionChooser();
 
         rebuildPieceNodes();
-        boolean isNewMove = lastMove != Move.NONE && lastMove != previousLastMove;
-        if (isNewMove && lastMove != moveWithoutAnimation) {
+        // Animate only a single step forward from what was shown (a move just played, or "next" while browsing);
+        // loading a game, jumping around or taking back simply redraws.
+        boolean oneMoveLater = game.startFen().equals(shownStartFen) && game.moves().size() == shownMoveCount + 1;
+        if (oneMoveLater && lastMove != previousLastMove && lastMove != moveWithoutAnimation) {
             animate(lastMove);
         }
+        shownStartFen = game.startFen();
+        shownMoveCount = game.moves().size();
         moveWithoutAnimation = Move.NONE;
         draw();
     }

@@ -1,10 +1,14 @@
 package io.github.sefirrdot.chess.gui;
 
 import io.github.sefirrdot.chess.core.EngineInfo;
+import io.github.sefirrdot.chess.core.board.Board;
 import io.github.sefirrdot.chess.core.board.Color;
+import io.github.sefirrdot.chess.core.board.Fen;
 import io.github.sefirrdot.chess.core.game.Game;
 import io.github.sefirrdot.chess.core.game.GameResult;
 import io.github.sefirrdot.chess.core.move.Move;
+import io.github.sefirrdot.chess.core.notation.Pgn;
+import io.github.sefirrdot.chess.core.notation.San;
 import io.github.sefirrdot.chess.gui.board.BoardTheme;
 import io.github.sefirrdot.chess.gui.board.BoardView;
 import io.github.sefirrdot.chess.gui.board.PieceSet;
@@ -13,9 +17,17 @@ import io.github.sefirrdot.chess.gui.clock.TimeControl;
 import io.github.sefirrdot.chess.gui.engine.EngineConfig;
 import io.github.sefirrdot.chess.gui.engine.UciEngine;
 import io.github.sefirrdot.chess.gui.engine.UciInfo;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,11 +40,18 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -42,6 +61,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.util.Duration;
 
 /**
@@ -58,7 +78,7 @@ public final class MainWindow extends BorderPane {
     private final BoardView board = new BoardView(new PieceSet(PieceSet.DEFAULT));
     private final Label status = new Label();
     private final Label engineLine = new Label();
-    private final ListView<String> moveList = new ListView<>();
+    private final MoveListView moveList = new MoveListView();
     private final PlayerCard topCard = new PlayerCard();
     private final PlayerCard bottomCard = new PlayerCard();
     private final Timeline ticker = new Timeline(new KeyFrame(Duration.millis(100), e -> tick()));
@@ -76,6 +96,10 @@ public final class MainWindow extends BorderPane {
     });
     /** Identifies the current game; replies tagged with an older value are stale. */
     private long gameId;
+    /** Ply shown on the board while browsing the move list, or -1 for the live position. */
+    private int viewPly = -1;
+    /** Names from a loaded PGN, overriding the setup's player names; null otherwise. */
+    private String[] pgnNames;
     private String stylesheet;
 
     public MainWindow() {
@@ -84,10 +108,12 @@ public final class MainWindow extends BorderPane {
         var boardHolder = new StackPane(board);
         boardHolder.getStyleClass().add("board-holder");
         boardHolder.setPadding(new Insets(24));
+        setTop(menuBar());
         setCenter(boardHolder);
         setRight(sidePanel());
 
         board.setOnMove(this::humanMove);
+        moveList.setOnSelect(this::browseTo);
         ticker.setCycleCount(Timeline.INDEFINITE);
         ticker.play();
         startGame(GameSetup.defaultSetup());
@@ -95,10 +121,12 @@ public final class MainWindow extends BorderPane {
 
     public void installShortcuts(Scene scene, String stylesheet) {
         this.stylesheet = stylesheet;
+        // Menu items carry their own accelerators; these are the move-list navigation keys.
         var accelerators = scene.getAccelerators();
-        accelerators.put(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN), this::showNewGameDialog);
-        accelerators.put(new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN), this::undo);
-        accelerators.put(new KeyCodeCombination(KeyCode.F), this::flip);
+        accelerators.put(new KeyCodeCombination(KeyCode.LEFT), () -> browseTo(shownPly() - 1));
+        accelerators.put(new KeyCodeCombination(KeyCode.RIGHT), () -> browseTo(shownPly() + 1));
+        accelerators.put(new KeyCodeCombination(KeyCode.HOME), () -> browseTo(0));
+        accelerators.put(new KeyCodeCombination(KeyCode.END), () -> browseTo(game.moves().size()));
     }
 
     /** Stops the clock timer and quits all engine processes. */
@@ -132,6 +160,7 @@ public final class MainWindow extends BorderPane {
         status.getStyleClass().add("status");
         status.setWrapText(true);
         status.setMaxWidth(Double.MAX_VALUE);
+        status.setMinHeight(Region.USE_PREF_SIZE);
         engineLine.getStyleClass().add("engine-line");
         engineLine.setMaxWidth(Double.MAX_VALUE);
         engineLine.setWrapText(true);
@@ -143,9 +172,13 @@ public final class MainWindow extends BorderPane {
 
         var movesHeader = new Label("MOVES");
         movesHeader.getStyleClass().add("section-header");
-        moveList.getStyleClass().add("move-list");
-        moveList.setFocusTraversable(false);
         VBox.setVgrow(moveList, Priority.ALWAYS);
+        var navigation = new HBox(6,
+                navButton("⏮", "First move (Home)", () -> browseTo(0)),
+                navButton("◀", "Previous move (←)", () -> browseTo(shownPly() - 1)),
+                navButton("▶", "Next move (→)", () -> browseTo(shownPly() + 1)),
+                navButton("⏭", "Last move (End)", () -> browseTo(game.moves().size())));
+        navigation.getChildren().forEach(b -> HBox.setHgrow(b, Priority.ALWAYS));
 
         var newGame = button("New game", "Ctrl+N", this::showNewGameDialog);
         newGame.getStyleClass().add("primary");
@@ -162,13 +195,53 @@ public final class MainWindow extends BorderPane {
         themes.setMaxWidth(Double.MAX_VALUE);
         themes.setOnAction(e -> board.setTheme(themes.getValue()));
 
-        var panel = new VBox(12, header, topCard, status, engineLine, movesHeader, moveList, bottomCard, buttons,
+        var panel = new VBox(12, header, topCard, status, engineLine, movesHeader, moveList, navigation, bottomCard,
+                buttons,
                 themeHeader, themes);
         panel.getStyleClass().add("side-panel");
         panel.setPadding(new Insets(24, 24, 24, 8));
         panel.setPrefWidth(340);
         panel.setMinWidth(280);
         return panel;
+    }
+
+    private static Button navButton(String symbol, String tooltip, Runnable action) {
+        var button = new Button(symbol);
+        button.getStyleClass().add("nav-button");
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setFocusTraversable(false);
+        button.setOnAction(e -> action.run());
+        button.setTooltip(new Tooltip(tooltip));
+        return button;
+    }
+
+    private MenuBar menuBar() {
+        var newGame = item("New game…", this::showNewGameDialog, shortcut(KeyCode.N));
+        var takeBack = item("Take back", this::undo, shortcut(KeyCode.Z));
+        var open = item("Open PGN…", this::openPgn, shortcut(KeyCode.O));
+        var save = item("Save PGN…", this::savePgn, shortcut(KeyCode.S));
+        var copyPgn = item("Copy PGN", this::copyPgn,
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN, KeyCombination.SHIFT_DOWN));
+        var copyFen = item("Copy FEN", this::copyFen, null);
+        var paste = item("Paste PGN or FEN", this::paste, shortcut(KeyCode.V));
+        var exit = item("Exit", () -> getScene().getWindow().hide(), null);
+        var gameMenu = new Menu("Game", null, newGame, takeBack, new SeparatorMenuItem(), open, save,
+                new SeparatorMenuItem(), copyPgn, copyFen, paste, new SeparatorMenuItem(), exit);
+        var viewMenu = new Menu("View", null, item("Flip board", this::flip, new KeyCodeCombination(KeyCode.F)));
+        return new MenuBar(gameMenu, viewMenu);
+    }
+
+    private static KeyCombination shortcut(KeyCode key) {
+        return new KeyCodeCombination(key, KeyCombination.SHORTCUT_DOWN);
+    }
+
+    private static MenuItem item(String text, Runnable action, KeyCombination accelerator) {
+        var item = new MenuItem(text);
+        item.setOnAction(e -> action.run());
+        if (accelerator != null) {
+            item.setAccelerator(accelerator);
+        }
+        return item;
     }
 
     private static Button button(String text, String shortcut, Runnable action) {
@@ -188,16 +261,23 @@ public final class MainWindow extends BorderPane {
 
     /** Starts a new game with the given players and time control. */
     public void startGame(GameSetup newSetup) {
+        startGame(newSetup, new Game());
+    }
+
+    /** Starts from a prepared game: a custom position, or a game loaded from PGN that may be continued. */
+    public void startGame(GameSetup newSetup, Game initial) {
         gameId++;
         setup = newSetup;
-        game = new Game();
+        game = initial;
+        viewPly = -1;
+        pgnNames = null;
         clock = new ChessClock(setup.timeControl());
         engineLine.setText("");
         board.setFlipped(setup.perspective() == Color.BLACK);
         board.setMovableSides(setup.isHuman(Color.WHITE), setup.isHuman(Color.BLACK));
         updatePlayerNames();
-        if (setup.timeControl().isTimed()) {
-            clock.start(Color.WHITE);
+        if (setup.timeControl().isTimed() && !game.result().isOver()) {
+            clock.start(game.sideToMove());
         }
         refresh();
         prepareEnginesThenPlay(gameId);
@@ -241,6 +321,7 @@ public final class MainWindow extends BorderPane {
     }
 
     private void play(int move) {
+        viewPly = -1;
         int mover = game.sideToMove();
         game.play(move);
         if (setup.timeControl().isTimed()) {
@@ -312,6 +393,7 @@ public final class MainWindow extends BorderPane {
             return;
         }
         gameId++;  // invalidates any pending engine reply
+        viewPly = -1;
         for (UciEngine engine : engines) {
             if (engine != null) {
                 engine.stop();
@@ -366,6 +448,9 @@ public final class MainWindow extends BorderPane {
     }
 
     private String playerName(int color) {
+        if (pgnNames != null) {
+            return pgnNames[color];
+        }
         if (setup.isHuman(color)) {
             return setup.isHuman(Color.opposite(color)) ? (color == Color.WHITE ? "White" : "Black") : "You";
         }
@@ -384,25 +469,143 @@ public final class MainWindow extends BorderPane {
     }
 
     private void refresh() {
-        board.setPosition(game);
-        status.setText(describe(game));
-        status.pseudoClassStateChanged(OVER, game.result().isOver());
+        boolean live = viewPly < 0;
+        board.setPosition(live ? game : gameAt(viewPly));
+        // Moves can only be made on the live position.
+        board.setMovableSides(live && setup.isHuman(Color.WHITE), live && setup.isHuman(Color.BLACK));
+        status.setText(live ? describe(game)
+                : "Move " + viewPly + " of " + game.moves().size() + "  ·  End returns to the game");
+        status.pseudoClassStateChanged(OVER, live && game.result().isOver());
         updateClocks();
 
-        List<Integer> moves = game.moves();
-        var rows = moveList.getItems();
-        rows.clear();
+        Board replay = Fen.parse(game.startFen());
+        List<String> san = new ArrayList<>();
+        for (int move : game.moves()) {
+            san.add(San.format(replay, move));
+            replay.makeMove(move);
+        }
         String[] startFields = game.startFen().split(" ");
-        int offset = startFields[1].equals("b") ? 1 : 0;
-        int fullmove = Integer.parseInt(startFields[5]);
-        for (int i = -offset; i < moves.size(); i += 2) {
-            String white = i >= 0 ? Move.toUci(moves.get(i)) : "…";
-            String black = i + 1 < moves.size() ? Move.toUci(moves.get(i + 1)) : "";
-            rows.add(String.format("%3d.  %-8s %s", fullmove++, white, black));
+        moveList.show(san, startFields[1].equals("b"), Integer.parseInt(startFields[5]), shownPly());
+    }
+
+    /** Ply on the board: the browsed one, or the live position's. */
+    private int shownPly() {
+        return viewPly < 0 ? game.moves().size() : viewPly;
+    }
+
+    /** Shows the position after {@code ply} moves; the last ply returns to the live, playable position. */
+    private void browseTo(int ply) {
+        int last = game.moves().size();
+        int target = Math.max(0, Math.min(last, ply));
+        int next = target == last ? -1 : target;
+        if (next != viewPly) {
+            viewPly = next;
+            refresh();
         }
-        if (!rows.isEmpty()) {
-            moveList.scrollTo(rows.size() - 1);
+    }
+
+    private Game gameAt(int ply) {
+        var view = new Game(game.startFen());
+        for (int i = 0; i < ply; i++) {
+            view.play(game.moves().get(i));
         }
+        return view;
+    }
+
+    // --- PGN / FEN ---
+
+    private Map<String, String> pgnTags() {
+        Map<String, String> tags = new LinkedHashMap<>();
+        tags.put("Event", "Seffir game");
+        tags.put("Site", "Seffir desktop app");
+        tags.put("Date", LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")));
+        tags.put("White", playerName(Color.WHITE));
+        tags.put("Black", playerName(Color.BLACK));
+        TimeControl tc = setup.timeControl();
+        tags.put("TimeControl", tc.isTimed() ? tc.baseMillis() / 1000 + "+" + tc.incrementMillis() / 1000 : "-");
+        return tags;
+    }
+
+    private void copyPgn() {
+        putOnClipboard(Pgn.write(game, pgnTags()));
+    }
+
+    private void copyFen() {
+        putOnClipboard(gameAt(shownPly()).fen());
+    }
+
+    private void savePgn() {
+        var chooser = new FileChooser();
+        chooser.setTitle("Save game");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PGN files", "*.pgn"));
+        chooser.setInitialFileName("seffir-" + LocalDate.now() + ".pgn");
+        File file = chooser.showSaveDialog(getScene().getWindow());
+        if (file != null) {
+            try {
+                Files.writeString(file.toPath(), Pgn.write(game, pgnTags()), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                showError("Could not save " + file.getName(), e.getMessage());
+            }
+        }
+    }
+
+    private void openPgn() {
+        var chooser = new FileChooser();
+        chooser.setTitle("Open game");
+        chooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PGN files", "*.pgn"),
+                new FileChooser.ExtensionFilter("All files", "*"));
+        File file = chooser.showOpenDialog(getScene().getWindow());
+        if (file != null) {
+            try {
+                loadPgn(Files.readString(file.toPath(), StandardCharsets.UTF_8));
+            } catch (IOException | IllegalArgumentException e) {
+                showError("Could not open " + file.getName(), e.getMessage());
+            }
+        }
+    }
+
+    /** Pasted text is tried as a FEN first, then as PGN. A FEN keeps the current opponents. */
+    private void paste() {
+        String text = Clipboard.getSystemClipboard().getString();
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        Game fromFen;
+        try {
+            fromFen = new Game(text.strip());
+        } catch (IllegalArgumentException notFen) {
+            try {
+                loadPgn(text);
+            } catch (IllegalArgumentException e) {
+                showError("The clipboard holds neither a FEN nor a PGN game", e.getMessage());
+            }
+            return;
+        }
+        startGame(setup, fromFen);
+    }
+
+    /** Loads a game for review between two humans, at its last move, from where it can be continued. */
+    public void loadPgn(String text) {
+        Pgn.PgnGame pgn = Pgn.readFirst(text);
+        startGame(new GameSetup(null, null, TimeControl.UNTIMED, setup.engineMoveMillis()), pgn.game());
+        pgnNames = new String[] {pgn.tags().getOrDefault("White", "White"), pgn.tags().getOrDefault("Black", "Black")};
+        updatePlayerNames();
+    }
+
+    private static void putOnClipboard(String text) {
+        var content = new ClipboardContent();
+        content.putString(text);
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
+    private void showError(String header, String detail) {
+        var alert = new Alert(Alert.AlertType.ERROR, detail);
+        alert.initOwner(getScene().getWindow());
+        alert.setHeaderText(header);
+        if (stylesheet != null) {
+            alert.getDialogPane().getStylesheets().add(stylesheet);
+        }
+        alert.showAndWait();
     }
 
     private static String describe(Game game) {
@@ -428,7 +631,8 @@ public final class MainWindow extends BorderPane {
             case DRAW -> "Draw";
             case ONGOING -> "";
         };
-        return outcome + " by " + reason + "  (" + result.outcome().pgn() + ")";
+        String by = reason.isEmpty() ? "" : " by " + reason;
+        return outcome + by + "  (" + result.outcome().pgn() + ")";
     }
 
     private void closeEngine(int color) {

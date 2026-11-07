@@ -18,6 +18,12 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
     <td align="center"><sub>Live engine output: depth, evaluation and principal variation</sub></td>
     <td align="center"><sub>Game end detection with the mated king highlighted</sub></td>
   </tr>
+  <tr>
+    <td colspan="2"><img src="docs/images/pgn-review.png" alt="Morphy's Opera Game loaded from PGN, SAN move list"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>Morphy's Opera Game (1858) opened from PGN: SAN move list, click any move or use ← → to replay it</sub></td>
+  </tr>
 </table>
 
 ## Features
@@ -29,6 +35,7 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 - **UCI:** `position`, `go` (depth / nodes / movetime / clock / infinite), `stop`, plus `d` to print the board.
 - **Desktop app (JavaFX):** vector pieces, drag & drop, move hints, promotion chooser, three board themes; play
   against the built-in engine or any UCI executable (Stockfish…) with Fischer clocks and a live thinking line.
+- **Notation:** SAN with minimal disambiguation, PGN reading (comments, variations, NAGs, several games) and writing.
 
 ## Architecture
 
@@ -59,8 +66,18 @@ It opens a game against Seffir with you as White. **New game** lets you pick you
 the built-in Seffir, or any UCI engine executable such as Stockfish) and the time control (1+0 up to 30+0, or
 unlimited). Undo against an engine takes back your move and its reply.
 
-Drag and drop or click-click to move, legal moves are hinted, promotions open a piece chooser.
-Shortcuts: <kbd>Ctrl</kbd>+<kbd>N</kbd> new game, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo, <kbd>F</kbd> flip the board.
+Drag and drop or click-click to move, legal moves are hinted, promotions open a piece chooser. The move list is in
+standard algebraic notation; click a move (or use the arrow keys) to replay the game.
+
+The **Game** menu opens and saves PGN files, copies the game as PGN or the position as FEN, and pastes either from the
+clipboard: a pasted FEN starts a game from that position against the current opponent.
+
+| Shortcut | Action | Shortcut | Action |
+|---|---|---|---|
+| <kbd>Ctrl</kbd>+<kbd>N</kbd> | New game | <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Ctrl</kbd>+<kbd>S</kbd> | Open / save PGN |
+| <kbd>Ctrl</kbd>+<kbd>Z</kbd> | Take back | <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Copy PGN |
+| <kbd>F</kbd> | Flip board | <kbd>Ctrl</kbd>+<kbd>V</kbd> | Paste PGN or FEN |
+| <kbd>←</kbd> <kbd>→</kbd> | Previous / next move | <kbd>Home</kbd> <kbd>End</kbd> | Start / live position |
 
 Piece set: [Chessnut](https://github.com/LexLuengas/chessnut-pieces) by Alexis Luengas, Apache 2.0.
 

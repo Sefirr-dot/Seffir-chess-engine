@@ -262,3 +262,87 @@
     -fx-text-fill: #0d1117;
     -fx-font-weight: bold;
 }
+
+/* SAN move list (scroll pane of clickable moves) */
+.move-list > .viewport {
+    -fx-background-color: transparent;
+}
+
+.move-list .corner {
+    -fx-background-color: transparent;
+}
+
+.move-number {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-text-fill: -seffir-muted;
+    -fx-padding: 3 0 3 4;
+}
+
+.move {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 14px;
+    -fx-text-fill: -seffir-text;
+    -fx-padding: 3 8;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.move:hover {
+    -fx-background-color: -seffir-surface-hover;
+}
+
+.move.current {
+    -fx-background-color: rgba(95, 168, 211, 0.30);
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+
+.nav-button {
+    -fx-font-size: 13px;
+    -fx-padding: 5 8;
+}
+
+/* Menu bar */
+.menu-bar {
+    -fx-background-color: #101317;
+    -fx-border-color: transparent transparent -seffir-border transparent;
+    -fx-padding: 2 12;
+}
+
+.menu-bar .menu .label {
+    -fx-text-fill: -seffir-text;
+}
+
+.menu-bar .menu:hover,
+.menu-bar .menu:showing {
+    -fx-background-color: -seffir-surface;
+}
+
+.context-menu {
+    -fx-background-color: -seffir-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+    -fx-padding: 4;
+}
+
+.menu-item .label {
+    -fx-text-fill: -seffir-text;
+}
+
+.menu-item .accelerator-text {
+    -fx-text-fill: -seffir-muted;
+}
+
+.menu-item:focused {
+    -fx-background-color: -seffir-accent;
+    -fx-background-radius: 6;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: #0d1117;
+}
+
+.separator .line {
+    -fx-border-color: -seffir-border transparent transparent transparent;
+}

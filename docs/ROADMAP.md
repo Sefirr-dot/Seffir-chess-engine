@@ -27,7 +27,7 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] Board rendering with piece set, drag & drop, legal move highlighting, promotion chooser, themes, flip
 - [x] Game model in core: result detection (mate, stalemate, threefold, fifty moves, insufficient material)
 - [x] Play vs engine (engine as UCI subprocess, built-in Seffir or any executable), clocks, new game dialog
-- [ ] Move list, PGN import/export, FEN setup
+- [x] SAN move list with replay (click / arrow keys), PGN open/save/copy/paste, FEN copy/paste
 - [ ] Engine analysis panel (depth, eval, PV)
 - [ ] **Match arena**: engine vs engine with a live grid of boards (several concurrent games), opening book with
       colour-reversed pairs, live W/D/L, Elo ± error and SPRT log-likelihood chart that stops the match on its own
