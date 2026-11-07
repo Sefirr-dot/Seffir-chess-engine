@@ -31,6 +31,7 @@ public final class Fen {
             board.setHalfmoveClock(parseNumber(fen, fields[4], 0, "halfmove clock"));
             board.setFullmoveNumber(parseNumber(fen, fields[5], 1, "fullmove number"));
         }
+        board.refreshHash();
         return board;
     }
 
