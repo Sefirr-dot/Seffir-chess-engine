@@ -43,6 +43,7 @@ public final class Search {
     private static final int SCORE_PROMOTION = 90_000;
 
     private final Board board;
+    private final TranspositionTable tt;
     private final Consumer<SearchInfo> listener;
     private volatile boolean stopRequested;
 
@@ -59,13 +60,22 @@ public final class Search {
     private boolean aborted;
     private int rootBestMove = Move.NONE;
 
-    /** @param listener receives a {@link SearchInfo} after every completed iteration (called on the search thread) */
-    public Search(Board board, Consumer<SearchInfo> listener) {
+    /**
+     * @param tt       shared transposition table; it outlives a single search so later moves of a game reuse it
+     * @param listener receives a {@link SearchInfo} after every completed iteration (called on the search thread)
+     */
+    public Search(Board board, TranspositionTable tt, Consumer<SearchInfo> listener) {
         this.board = board.copy();
+        this.tt = tt;
         this.listener = listener;
         for (int i = 0; i <= MAX_PLY; i++) {
             moveLists[i] = new MoveList();
         }
+    }
+
+    /** A search with its own small transposition table. */
+    public Search(Board board, Consumer<SearchInfo> listener) {
+        this(board, new TranspositionTable(8), listener);
     }
 
     public Search(Board board) {
@@ -140,12 +150,29 @@ public final class Search {
             return 0;
         }
 
+        // Transposition table: return a stored result that is deep enough and conclusive for this window; otherwise
+        // at least search its best move first. The root always searches, so it always produces a move and a PV.
+        long key = board.hash();
+        long entry = tt.probe(key);
+        int ttMove = TranspositionTable.move(entry);
+        if (entry != TranspositionTable.NO_ENTRY && ply > 0 && TranspositionTable.depth(entry) >= depth) {
+            int ttScore = TranspositionTable.scoreFromTable(TranspositionTable.score(entry), ply);
+            int bound = TranspositionTable.bound(entry);
+            if (bound == TranspositionTable.EXACT
+                    || (bound == TranspositionTable.LOWER_BOUND && ttScore >= beta)
+                    || (bound == TranspositionTable.UPPER_BOUND && ttScore <= alpha)) {
+                return ttScore;
+            }
+        }
+        int alphaAtEntry = alpha;
+
         MoveList moves = moveLists[ply];
         MoveGenerator.generatePseudoLegal(board, moves);
-        scoreMoves(moves, ply, ply == 0 ? rootBestMove : Move.NONE);
+        scoreMoves(moves, ply, ttMove != Move.NONE ? ttMove : (ply == 0 ? rootBestMove : Move.NONE));
 
         int legalMoves = 0;
         int bestScore = -INFINITY;
+        int bestMove = Move.NONE;
         for (int i = 0; i < moves.size(); i++) {
             int move = pickNext(moves, ply, i);
             board.makeMove(move);
@@ -162,6 +189,7 @@ public final class Search {
 
             if (score > bestScore) {
                 bestScore = score;
+                bestMove = move;
                 if (score > alpha) {
                     alpha = score;
                     updatePv(ply, move);
@@ -176,6 +204,12 @@ public final class Search {
             // Checkmate (prefer the quickest mate / slowest defeat via ply) or stalemate.
             return inCheck ? -MATE + ply : 0;
         }
+        int bound = bestScore >= beta ? TranspositionTable.LOWER_BOUND
+                : bestScore > alphaAtEntry ? TranspositionTable.EXACT
+                : TranspositionTable.UPPER_BOUND;
+        // After a fail low no move proved better than the others: keep whatever move the entry already had.
+        int moveToStore = bound == TranspositionTable.UPPER_BOUND ? Move.NONE : bestMove;
+        tt.store(key, moveToStore, TranspositionTable.scoreToTable(bestScore, ply), depth, bound);
         return bestScore;
     }
 

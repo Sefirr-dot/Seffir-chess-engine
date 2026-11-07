@@ -36,7 +36,8 @@ class UciProtocolTest {
     @Test
     void uciHandshakeIdentifiesEngine() throws IOException {
         assertEquals(
-                List.of("id name " + EngineInfo.fullName(), "id author " + EngineInfo.AUTHOR, "uciok"),
+                List.of("id name " + EngineInfo.fullName(), "id author " + EngineInfo.AUTHOR,
+                        "option name Hash type spin default 64 min 1 max 1024", "uciok"),
                 session("uci\n"));
     }
 
@@ -139,6 +140,19 @@ class UciProtocolTest {
         assertFalse(limits.infinite());
         assertTrue(UciProtocol.parseGo("go infinite".split(" ")).infinite());
         assertEquals(1_500, UciProtocol.parseGo("go movetime 1500".split(" ")).moveTime());
+    }
+
+    @Test
+    void hashOptionAndNewGameAreAcceptedAndSearchStillWorks() throws IOException {
+        List<String> output = session("""
+                setoption name Hash value 16
+                setoption name Hash value lots
+                ucinewgame
+                position fen 6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1
+                go depth 3
+                """);
+        assertTrue(output.contains("info string invalid Hash value lots"), output.toString());
+        assertEquals("a1a8", bestMove(output));
     }
 
     @Test
