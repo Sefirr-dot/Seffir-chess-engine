@@ -16,6 +16,10 @@ public final class Bitboard {
     public static final long FILE_G = FILE_A << 6;
     public static final long FILE_H = FILE_A << 7;
 
+    /** a1 is a dark square. */
+    public static final long DARK_SQUARES = 0xAA55_AA55_AA55_AA55L;
+    public static final long LIGHT_SQUARES = ~DARK_SQUARES;
+
     public static final long RANK_1 = 0xFFL;
     public static final long RANK_2 = RANK_1 << 8;
     public static final long RANK_3 = RANK_1 << 16;
