@@ -4,8 +4,8 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 
 [![CI](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Sefirr-dot/Seffir-chess-engine/actions/workflows/ci.yml)
 
-> **Status:** playable engine and desktop app — play against Seffir or any UCI engine with clocks.
-> Next: SAN/PGN, an analysis panel and a match arena. See the [roadmap](docs/ROADMAP.md).
+> **Status:** playable engine and a complete desktop app — play, analyse, and run engine matches with live SPRT.
+> Next: making the engine stronger, every change proven in the arena. See the [roadmap](docs/ROADMAP.md).
 
 ![Seffir playing itself in the desktop app, Walnut theme](docs/images/game-walnut.png)
 
@@ -36,6 +36,8 @@ A chess engine written from scratch in Java 21, with a native JavaFX desktop GUI
 - **Desktop app (JavaFX):** vector pieces, drag & drop, move hints, promotion chooser, three board themes; play
   against the built-in engine or any UCI executable (Stockfish…) with Fischer clocks and a live thinking line.
 - **Notation:** SAN with minimal disambiguation, PGN reading (comments, variations, NAGs, several games) and writing.
+- **Match arena:** engine-vs-engine games played live in parallel, opening book with colour-reversed pairs, Elo with
+  error bars, likelihood of superiority and an SPRT that stops the match on its own.
 
 ## Architecture
 
@@ -85,6 +87,19 @@ after a game ends, never while playing against an engine.
 | <kbd>←</kbd> <kbd>→</kbd> | Previous / next move | <kbd>Home</kbd> <kbd>End</kbd> | Start / live position |
 
 Piece set: [Chessnut](https://github.com/LexLuengas/chessnut-pieces) by Alexis Luengas, Apache 2.0.
+
+## Match arena
+
+![Match arena: four live games, Elo and SPRT](docs/images/arena.png)
+
+**Tools → Match arena…** (<kbd>Ctrl</kbd>+<kbd>M</kbd>) plays engine A against engine B — the built-in Seffir, any UCI
+executable, or a `seffir.jar` built from another branch. Games run in parallel, each opening twice with colours
+swapped. The featured game is shown full size (click a thumbnail to switch), and after every game the panel updates
+the Elo difference with its 95% interval, the likelihood of superiority and the SPRT log-likelihood ratio, which ends
+the match as soon as it crosses a bound. All games can be saved as PGN.
+
+The screenshot shows why this matters: Seffir against itself after 13 games reads −26.8 ± 191.9 Elo — pure noise that
+a handful of games cannot tell apart from a real change. The SPRT keeps testing until the evidence is conclusive.
 
 ## Play against it in another GUI
 

@@ -10,6 +10,7 @@ import io.github.sefirrdot.chess.core.move.Move;
 import io.github.sefirrdot.chess.core.notation.Pgn;
 import io.github.sefirrdot.chess.core.notation.San;
 import io.github.sefirrdot.chess.gui.analysis.AnalysisPanel;
+import io.github.sefirrdot.chess.gui.arena.ArenaWindow;
 import io.github.sefirrdot.chess.gui.analysis.EvalBar;
 import io.github.sefirrdot.chess.gui.analysis.Evaluation;
 import io.github.sefirrdot.chess.gui.analysis.PvLine;
@@ -105,6 +106,7 @@ public final class MainWindow extends BorderPane {
     private int viewPly = -1;
     /** Names from a loaded PGN, overriding the setup's player names; null otherwise. */
     private String[] pgnNames;
+    private ArenaWindow arena;
 
     // Analysis: a separate engine process thinking about the position on the board, in human-only games or after
     // the game is over (never while playing against an engine).
@@ -258,7 +260,15 @@ public final class MainWindow extends BorderPane {
                 new SeparatorMenuItem(), copyPgn, copyFen, paste, new SeparatorMenuItem(), exit);
         var viewMenu = new Menu("View", null, item("Flip board", this::flip, new KeyCodeCombination(KeyCode.F)),
                 item("Analysis on / off", () -> setAnalyzing(!analyzing), new KeyCodeCombination(KeyCode.A)));
-        return new MenuBar(gameMenu, viewMenu);
+        var toolsMenu = new Menu("Tools", null, item("Match arena…", this::openArena, shortcut(KeyCode.M)));
+        return new MenuBar(gameMenu, viewMenu, toolsMenu);
+    }
+
+    private void openArena() {
+        if (arena == null) {
+            arena = new ArenaWindow(getScene().getWindow(), stylesheet);
+        }
+        arena.show();
     }
 
     private static KeyCombination shortcut(KeyCode key) {

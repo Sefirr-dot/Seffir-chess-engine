@@ -23,16 +23,16 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] MVV-LVA capture ordering, draws by repetition / fifty-move rule
 - [x] Self-contained `seffir.jar` + launcher scripts for GUIs — depth 7 in ~2 s from the start position
 
-## M3 — Desktop GUI v1
+## M3 — Desktop GUI v1 ✅
 - [x] Board rendering with piece set, drag & drop, legal move highlighting, promotion chooser, themes, flip
 - [x] Game model in core: result detection (mate, stalemate, threefold, fifty moves, insufficient material)
 - [x] Play vs engine (engine as UCI subprocess, built-in Seffir or any executable), clocks, new game dialog
 - [x] SAN move list with replay (click / arrow keys), PGN open/save/copy/paste, FEN copy/paste
 - [x] Analysis mode: evaluation bar, depth / speed, best line in SAN, follows the replayed position
-- [ ] **Match arena**: engine vs engine with a live grid of boards (several concurrent games), opening book with
+- [x] **Match arena**: engine vs engine with a live grid of boards (several concurrent games), opening book with
       colour-reversed pairs, live W/D/L, Elo ± error and SPRT log-likelihood chart that stops the match on its own
-- [ ] Click a live game to follow it full size (both engines' eval and PV); exhibition games at slow time controls
-- [ ] PGN replayer to step through finished games (also for headless `fastchess` runs)
+- [x] Click a live game to follow it full size; exhibition games at slow time controls
+- [x] PGN of every arena game; finished games replayable in the main window
 
 ## M4 — Stronger search
 - [ ] Transposition table

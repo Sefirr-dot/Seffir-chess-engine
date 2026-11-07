@@ -419,3 +419,159 @@
     -fx-background-color: #2c4a5e;
     -fx-border-color: -seffir-accent;
 }
+
+/* Match arena */
+.arena-setup {
+    -fx-background-color: #101317;
+    -fx-border-color: transparent transparent -seffir-border transparent;
+}
+
+.arena .spinner .text-field,
+.arena .combo-box .list-cell {
+    -fx-text-fill: -seffir-text;
+}
+
+.arena .spinner {
+    -fx-background-color: -seffir-surface;
+}
+
+.arena .spinner .text-field {
+    -fx-background-color: -seffir-surface;
+}
+
+.check-box {
+    -fx-text-fill: -seffir-text;
+}
+
+.arena-featured-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-text;
+}
+
+.arena-player {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 14px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.arena-strip {
+    -fx-background-color: #101317;
+    -fx-border-color: -seffir-border transparent transparent transparent;
+}
+
+.arena-thumb {
+    -fx-padding: 6;
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 8;
+    -fx-border-color: -seffir-border;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+}
+
+.arena-thumb:hover {
+    -fx-border-color: #4a5566;
+}
+
+.arena-thumb:featured {
+    -fx-border-color: -seffir-accent;
+    -fx-border-width: 2;
+}
+
+.arena-thumb-caption {
+    -fx-font-size: 11px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.arena-elo {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-text;
+}
+
+.arena-wdl {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 15px;
+    -fx-text-fill: -seffir-text;
+}
+
+.arena-details {
+    -fx-font-size: 12px;
+    -fx-text-fill: -seffir-muted;
+}
+
+.arena-sprt-bar .track {
+    -fx-background-color: #2a2f38;
+    -fx-background-radius: 4;
+}
+
+.arena-sprt-bar .bar {
+    -fx-background-color: -seffir-accent;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}
+
+.arena-verdict {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -seffir-warn;
+}
+
+.arena-verdict:pass {
+    -fx-text-fill: #4cd47a;
+}
+
+.arena-verdict:fail {
+    -fx-text-fill: #ff5a52;
+}
+
+.arena-chart {
+    -fx-padding: 0;
+}
+
+.arena-chart .chart-plot-background {
+    -fx-background-color: -seffir-panel;
+}
+
+.arena-chart .chart-vertical-grid-lines,
+.arena-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #262c35;
+}
+
+.arena-chart .axis {
+    -fx-tick-label-fill: -seffir-muted;
+}
+
+.arena-chart .axis-label {
+    -fx-text-fill: -seffir-muted;
+}
+
+.arena-chart .default-color0.chart-series-line {
+    -fx-stroke: #4cd47a;
+    -fx-stroke-width: 1;
+    -fx-stroke-dash-array: 4 4;
+}
+
+.arena-chart .default-color1.chart-series-line {
+    -fx-stroke: #ff5a52;
+    -fx-stroke-width: 1;
+    -fx-stroke-dash-array: 4 4;
+}
+
+.arena-chart .default-color2.chart-series-line {
+    -fx-stroke: -seffir-accent-strong;
+    -fx-stroke-width: 2;
+}
+
+.arena-log {
+    -fx-background-color: -seffir-panel;
+    -fx-background-radius: 8;
+}
+
+.arena-log .list-cell {
+    -fx-font-family: "Cascadia Mono", "Consolas", "JetBrains Mono", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -seffir-text;
+    -fx-background-color: transparent;
+}
