@@ -35,7 +35,7 @@ Each milestone is one or more branches/PRs. A milestone is done when it is merge
 - [x] PGN of every arena game; finished games replayable in the main window
 
 ## M4 — Stronger search
-- [ ] Transposition table
+- [x] Transposition table (Zobrist-keyed, depth/bound entries, UCI `Hash` option)
 - [ ] Move ordering: TT move, killers, history
 - [ ] Null-move pruning, late move reductions, PVS
 - [ ] Magic bitboards

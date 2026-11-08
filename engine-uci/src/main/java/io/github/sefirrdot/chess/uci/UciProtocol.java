@@ -9,10 +9,12 @@ import io.github.sefirrdot.chess.core.movegen.MoveGenerator;
 import io.github.sefirrdot.chess.core.search.Search;
 import io.github.sefirrdot.chess.core.search.SearchInfo;
 import io.github.sefirrdot.chess.core.search.SearchLimits;
+import io.github.sefirrdot.chess.core.search.TranspositionTable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -27,10 +29,14 @@ import java.util.concurrent.CountDownLatch;
  */
 public final class UciProtocol {
 
+    static final int MAX_HASH_MEGABYTES = 1024;
+
     private final BufferedReader in;
     private final PrintStream out;
 
     private Board board = Board.startingPosition();
+    /** Kept across searches so each move of a game benefits from the previous ones. */
+    private final TranspositionTable tt = new TranspositionTable(TranspositionTable.DEFAULT_MEGABYTES);
     private Search search;
     private Thread searchThread;
     private SearchLimits searchLimits;
@@ -66,12 +72,19 @@ public final class UciProtocol {
             case "uci" -> {
                 send("id name " + EngineInfo.fullName());
                 send("id author " + EngineInfo.AUTHOR);
+                send("option name Hash type spin default " + TranspositionTable.DEFAULT_MEGABYTES
+                        + " min 1 max " + MAX_HASH_MEGABYTES);
                 send("uciok");
             }
             case "isready" -> send("readyok");
             case "ucinewgame" -> {
                 stopSearch();
                 board = Board.startingPosition();
+                tt.clear();
+            }
+            case "setoption" -> {
+                stopSearch();
+                setOption(line);
             }
             case "position" -> {
                 stopSearch();
@@ -125,7 +138,7 @@ public final class UciProtocol {
     private void go(String[] tokens) {
         stopSearch();
         SearchLimits limits = parseGo(tokens);
-        Search current = new Search(board, this::sendInfo);
+        Search current = new Search(board, tt, this::sendInfo);
         CountDownLatch latch = new CountDownLatch(limits.infinite() ? 1 : 0);
         search = current;
         searchLimits = limits;
@@ -141,6 +154,26 @@ public final class UciProtocol {
         }, "search");
         searchThread.setDaemon(true);
         searchThread.start();
+    }
+
+    /** {@code setoption name Hash value 128}; unknown options are ignored. */
+    private void setOption(String line) {
+        String lower = line.toLowerCase(Locale.ROOT);
+        int nameAt = lower.indexOf(" name ");
+        int valueAt = lower.indexOf(" value ");
+        if (nameAt < 0 || valueAt < nameAt) {
+            return;
+        }
+        String name = line.substring(nameAt + 6, valueAt).strip();
+        String value = line.substring(valueAt + 7).strip();
+        if (name.equalsIgnoreCase("Hash")) {
+            try {
+                int megabytes = Integer.parseInt(value);
+                tt.resize(Math.max(1, Math.min(MAX_HASH_MEGABYTES, megabytes)));
+            } catch (NumberFormatException e) {
+                send("info string invalid Hash value " + value);
+            }
+        }
     }
 
     static SearchLimits parseGo(String[] tokens) {
